@@ -1,0 +1,24 @@
+#!/bin/bash
+
+#sourcing the username and password for mysql query
+source /home/ubuntu/scripts/var/newcustomervar
+
+#making the MySQL query, which selects firstname, lastname, product_id for any order which is in complete status, and sends output to a file called newquery
+
+mysql -u $username --password=$password -e 'select concat(firstname, " ", lastname) as 'name', email, product_id from opencartdb.oc_order, opencartdb.oc_order_product where order_status_id= 5 and oc_order.order_id = oc_order_product.order_product_id;' > /home/ubuntu/scripts/newquery
+
+#this removes the first line of the file, which would contain the column headers, outputs it to a tmpfile, then mvs the temp file back and renames to original which overwrites it
+
+sed '1d' /home/ubuntu/scripts/newquery > /home/ubuntu/scripts/tmpfile; mv /home/ubuntu/scripts/tmpfile /home/ubuntu/scripts/newquery
+
+#this command compares the contents of the newquery file to that of the oldquery file. Any differences are output to a file called neworders
+
+comm -2 -3 <(sort /home/ubuntu/scripts/newquery) <(sort /home/ubuntu/scripts/oldquery) > /home/ubuntu/scripts/neworders
+
+#the next command calls up the creator script, running it against the neworders file as an input
+
+/home/ubuntu/scripts/creator /home/ubuntu/scripts/neworders
+
+#this command then copies the newquery file to the oldquery file
+
+cp /home/ubuntu/scripts/newquery /home/ubuntu/scripts/oldquery

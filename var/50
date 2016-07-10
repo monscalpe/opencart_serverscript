@@ -1,0 +1,60 @@
+#!/bin/bash
+source /home/ubuntu/scripts/var/firstname
+source /home/ubuntu/scripts/var/surname
+source /home/ubuntu/scripts/var/email
+source /home/ubuntu/scripts/var/product
+UN="$(sudo cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 6 | head -n 1)"
+PW="$(sudo cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1)"
+DATE="$(date +%Y/%m/%d\ %H:%M:%S)"
+ED="$(date +%Y/%m/%d\ %H:%M:%S -d "+1 day")"
+
+ssh -p53424 -i /home/ubuntu/.ssh/garethgingellamazonserver.pem ubuntu@ireland.vpnphantom.com "/usr/local/vpnserver/vpncmd /server ireland.vpnphantom.com /password:Answsgbbb86! /hub:ireland /cmd usercreate $UN /group:ireland /realname:$firstname $surname /note:$email $product $date $ED; /usr/local/vpnserver/vpncmd /server ireland.vpnphantom.com /password:Answsgbbb86! /hub:ireland /cmd userpasswordset $UN /password:$PW; /usr/local/vpnserver/vpncmd /server ireland.vpnphantom.com /password:Answsgbbb86! /hub:ireland /cmd userexpiresset $UN /expires:"\"$ED\"""
+
+from="orders@vpnphantom.com"
+subject="L2TP/IPSEC Credentials - $firstname $surname - VPN Phantom"
+boundary=`uuidgen`
+declare -a attachments
+attachments=( "/home/ubuntu/scripts/credentials/openvpn/uk_openvpn_vpnphantom.zip" )
+
+# Build headers
+{
+
+printf '%s\n' "From: $from
+To: $email
+Subject: $subject
+Date: $DATE
+Mime-Version: 1.0
+Content-Type: multipart/mixed; boundary=\"$boundary\"
+
+--${boundary}
+Content-Type: text/html;charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Content-ID: html-body
+
+<!DOCTYPE html>
+<html>
+<head><title></title></head>
+<body>
+<p>Dear <b>$firstname $surname</b>,</p><br>
+<p>This email contains the <b>L2TP/IPSEC credentials </b> you recently purchased from <b>www.vpnphantom.com</b></p>
+<p>Your credentials <b>can be found below</b>, and can be used <b>straight away</b>.</p>
+<p><b>REMEMBER</b> - your credentials are due to <b>expire</b> in exactly <b>1 day</b></p><br>
+<p><b>USERNAME<br>$UN</p>
+<p>PASSWORD<br>$PW</p>
+<p>GROUP NAME<br>ireland</p> 
+<p>EXPIRY DATE<br>$ED</p>
+<p>HOSTNAME<br>ireland.vpnphantom.com</p>
+<p>GROUP SECRET<br>vpnph@nt0m!</b></p><br>
+<p><i><b>Don't forget</b></i> - if you need any help setting up your VPN, visit our <a href="https://www.vpnphantom.com">Main Website</a> for SETUP GUIDES</p>
+<p>If you encounter any issues, please visit our <b>FAQ</b> or email us at <b>support@vpnphantom.com</b></p>
+<hr>
+<footer>
+<a href="https://www.vpnphantom.com"><img src="https://www.vpnphantom.com/shop/image/catalog/vpnlogo.png"></a>
+</footer>
+</body>
+</html>"
+ 
+# print last boundary with closing --
+printf '%s\n' "--${boundary}--"
+ 
+} | sendmail -t -oi -f "orders@vpnphantom.com" 

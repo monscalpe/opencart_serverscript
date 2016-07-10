@@ -1,0 +1,54 @@
+#!/bin/bash
+
+#this script calls the external variables established in previous script, and uses them in this one to attach a given file to a html email, which we then send using sendmail.
+
+source /home/ubuntu/scripts/var/firstname
+source /home/ubuntu/scripts/var/surname
+source /home/ubuntu/scripts/var/email
+source /home/ubuntu/scripts/var/product
+UN="$(sudo cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 6 | head -n 1)"
+PW="$(sudo cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1)"
+DATE="$(date +%Y/%m/%d\ %H:%M:%S)"
+
+#this is where we compile and send the email
+
+from="hello@yourwebsite.com"
+subject="yoursubject"
+boundary=`uuidgen`
+declare -a attachments
+attachments=( "/home/ubuntu/somezipfile.zip" )
+
+# Build headers
+{
+
+printf '%s\n' "From: $from
+To: $email
+Subject: $subject
+Date: $DATE
+Mime-Version: 1.0
+Content-Type: multipart/mixed; boundary=\"$boundary\"
+
+--${boundary}
+Content-Type: text/html;charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Content-ID: html-body
+
+<!DOCTYPE html>
+<html>
+<head><title></title></head>
+<body>
+<p>Dear <b>$firstname $surname</b>,</p><br>
+<p>This email contains blah blah blah</p>
+<p>Your credentials are attached to this email and can be used <b>straight away</b>.</p>
+<p>Thank you for shopping at yourshop</p>
+<hr>
+<footer>
+<a href="https://www.yoursite.com"><img src="https://www.yourimage.com/image.png"></a>
+</footer>
+</body>
+</html>"
+ 
+# print last boundary with closing --
+printf '%s\n' "--${boundary}--"
+ 
+} | sendmail -t -oi -f "hello@yoursite.com" 

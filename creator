@@ -1,0 +1,15 @@
+#!/bin/bash
+
+#The following command reads each line one by one in the neworders file, breaking down the output to new variables. It also then exports these variables to the relevant files in the var folder. Once exported, it will then run any individual product script for a given product it finds in the productscripts folder. It will complete this process for every line until there is no line.
+
+while IFS='' read -u10 -r line || [[ -n "$line" ]]; do
+	firstname=$(echo $line | awk '{print $1}')    
+	surname=$(echo $line | awk '{print $2}')
+	email=$(echo $line | awk '{print $3}')
+	product=$(echo $line | awk '{print $4}')
+	echo firstname=\"$firstname\" > /home/ubuntu/scripts/var/firstname
+	echo surname=\"$surname\" > /home/ubuntu/scripts/var/surname
+	echo email=\"$email\" > /home/ubuntu/scripts/var/email
+	echo product=\"$product\" > /home/ubuntu/scripts/var/product
+	/home/ubuntu/scripts/productscripts/$product
+done 10< "$1"
